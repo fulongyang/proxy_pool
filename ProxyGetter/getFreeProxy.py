@@ -11,8 +11,11 @@
                    2016/11/25:
 -------------------------------------------------
 """
+import random
 import re
 import sys
+import time
+
 import requests
 from time import sleep
 
@@ -284,6 +287,108 @@ class GetFreeProxy(object):
     #         proxies = re.findall(r'<td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})</td>[\s\S]*?<td>(\d+)</td>', r.text)
     #         for proxy in proxies:
     #             yield ':'.join(proxy)
+
+
+
+    @staticmethod
+    def freeProxy14():
+        # --------随机代理
+
+        # ---------------二 修改端口
+        all_proxy_list = []
+        url = 'http://proxy.1again.cc:35050/api/v1/proxy/?https=1'
+        for i in range(1, 500):
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36', }
+            proxies = {"http": "http://{proxy}".format(
+                proxy=requests.get("http://127.0.0.1:5010/get/").json().get('proxy', ''))}
+            github_proxy_ip = requests.get(url, verify=False, headers=headers, proxies=proxies).json().get('data',
+                                                                                                           {}).get(
+                'proxy', '')
+            all_proxy_list.append(github_proxy_ip)
+            time.sleep(0.5)
+        for proxy in all_proxy_list:
+            print('*' * 20, 'alter port', proxy)
+            yield proxy
+
+    @staticmethod
+    def freeProxy15():
+        def f(page=1, pages=0):
+            import requests
+            from lxml import etree
+            urls = ['https://www.kuaidaili.com/free/intr/{}/', 'https://www.kuaidaili.com/free/inha/{}/']
+            # url = 'https://www.kuaidaili.com/free/inha/{}/'.format(page)
+            for url in urls:
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'}
+                response = requests.get(url=url.format(page), headers=headers)
+                print('this page {} response:{}'.format(page, response))
+                time.sleep(1)
+                xpath_find = etree.HTML(response.text, parser=None, base_url=None)
+                ip_result = xpath_find.xpath('//td[@data-title="IP"]/text()')
+                port_result = xpath_find.xpath('//td[@data-title="PORT"]/text()')
+                if page == 1:
+                    pages = int(xpath_find.xpath('//div[@id="listnav"]/ul//li//a/text()')[-1:][0])
+                yield from list(map(lambda x: '{}:{}'.format(x[0], x[1]), zip(ip_result, port_result)))
+                if page < pages:
+                    yield from f(page + 10, pages=pages)
+
+        yield from f(page=1, pages=0)
+
+
+
+
+    @staticmethod
+    def freeProxy16():
+        for i in range(50):
+            url = 'https://proxyapi.mimvp.com/api/fetchsecret.php?orderid=860070221946183809&num=5&result_fields=1,2,3'
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'}
+            response = requests.get(url=url, headers=headers)
+            ip_proxys = re.findall(
+                r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b\:\d+",
+                response.text)
+            yield from ip_proxys
+
+
+    @staticmethod
+    def freeProxy17():
+        def f(page=1, pages=0):
+            import requests
+            from lxml import etree
+            # urls = ['http://www.xiladaili.com/gaoni/{}/','']
+            url = 'http://www.xiladaili.com/http/{}/'.format(page)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'}
+
+            proxies = {"http": "http://{proxy}".format(
+                proxy=requests.get("http://127.0.0.1:5010/get/").json().get('proxy', ''))}
+            response = requests.get(url=url, headers=headers, proxies=proxies)
+            print('this page {} response:{}'.format(page, response))
+            time.sleep(1)
+            if response.status_code != 200:
+                while True:
+                    proxies = {"http": "http://{proxy}".format(
+                        proxy=requests.get("http://127.0.0.1:5010/get/").json().get('proxy', ''))}
+                    response = requests.get(url=url, headers=headers, proxies=proxies)
+                    print('response is', response.status_code, page, pages)
+                    if response.status_code == 200:
+                        break
+            xpath_find = etree.HTML(response.text, parser=None, base_url=None)
+            ip_proxys = re.findall(
+                r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b\:\d+",
+                response.text)
+            if page == 1:
+                pages = int(xpath_find.xpath('//nav[@aria-label="Page navigation example"]/ul//li//a/text()')[-2:][0])
+            yield from ip_proxys
+            if page < pages:
+                yield from f(page + 1, pages=pages)
+        yield from f(page=1, pages=0)
+
+
+
+
+
 
 
 if __name__ == '__main__':
